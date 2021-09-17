@@ -4,16 +4,26 @@
 # when a midi event occur
 #
 # To use on ubuntu
-# apt install python3-mido python3-dbus
+# apt install python3-mido python3-dbus python3-rtmidi xdotool
 #
 # then manualy start (or add on autostart)
 #
-import dbus
 import time
 import mido
+import argparse
+import subprocess
 
 # Track last time we send the kick
 last_send = time.time()
+
+
+class ScreenSaverKick:
+
+    def __init__(self):
+        None
+
+    def Kick(self):
+        subprocess.run(["xdotool", "key", "ctrl"])
 
 
 def get_msg(msg):
@@ -24,21 +34,27 @@ def get_msg(msg):
     if (t - last_send) > 30:
         last_send = t
         print("ping")
-        saver_interface.SimulateUserActivity()
+        saver_interface.Kick()
 
 
 # Open dbus interface
-bus = dbus.SessionBus()
-saver = bus.get_object('org.freedesktop.ScreenSaver', '/ScreenSaver')
-saver_interface = dbus.Interface(saver, dbus_interface='org.freedesktop.ScreenSaver')
+parser = argparse.ArgumentParser()
+parser.add_argument("-v", "--verbose", help="verbose", action='store_true')
+parser.add_argument("-s", "--simulate", help="simulate action on screensaver", action='store_true')
+args = parser.parse_args()
 
+saver_interface = ScreenSaverKick()
 
-print("start")
-# Add a callback on each midi input port
-inports = mido.get_input_names()
-for i in inports:
-    mido.open_input(i, callback=get_msg)
+if args.simulate:
+    saver_interface.Kick()
+else:
+    print("start")
+    # Add a callback on each midi input port
+    inports = mido.get_input_names()
+    for i in inports:
+        print("Connect to {}".format(i))
+        mido.open_input(i, callback=get_msg)
 
-# Finaly wait forever...
-while True:
-    time.sleep(3660)
+    # Finaly wait forever...
+    while True:
+        time.sleep(3660)
