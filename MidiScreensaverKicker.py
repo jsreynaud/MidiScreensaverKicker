@@ -12,6 +12,7 @@ import time
 import mido
 import argparse
 import subprocess
+import os
 
 # Track last time we send the kick
 last_send = time.time()
@@ -20,7 +21,9 @@ last_send = time.time()
 class ScreenSaverKick:
 
     def __init__(self):
-        None
+        # Test /usr/bin/xdotool exist
+        if not os.path.exists("/usr/bin/xdotool"):
+            print("!!!!! Error: xdotool is unavailable. Please install it")
 
     def Kick(self):
         subprocess.run(["xdotool", "key", "ctrl"])
@@ -29,9 +32,9 @@ class ScreenSaverKick:
 def get_msg(msg):
     # On message receive: SimulateActivity
     global last_send
-    print(msg)
+    # print(msg)
     t = time.time()
-    if (t - last_send) > 30:
+    if (t - last_send) > 5:
         last_send = t
         print("ping")
         saver_interface.Kick()
@@ -39,16 +42,17 @@ def get_msg(msg):
 
 # Open dbus interface
 parser = argparse.ArgumentParser()
-parser.add_argument("-v", "--verbose", help="verbose", action='store_true')
-parser.add_argument("-s", "--simulate", help="simulate action on screensaver", action='store_true')
+parser.add_argument("-v", "--verbose", help="verbose", action="store_true")
+parser.add_argument("-s", "--simulate", help="simulate action on screensaver", action="store_true")
 args = parser.parse_args()
 
 saver_interface = ScreenSaverKick()
 
+
 if args.simulate:
     saver_interface.Kick()
 else:
-    print("start")
+    print("Start")
     # Add a callback on each midi input port
     inports = mido.get_input_names()
     for i in inports:
